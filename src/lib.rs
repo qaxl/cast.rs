@@ -183,7 +183,7 @@ macro_rules! float_promotion {
                     type Output = Result<$dst, Error>;
 
                     #[inline]
-                    fn cast(src: $src) -> $dst {
+                    fn cast(src: $src) -> Self::Output {
                         Ok(src as $dst)
                     }
                 }
