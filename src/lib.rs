@@ -9,7 +9,7 @@
 //! # fn main() {
 //! // Infallible operations, like integer promotion, are equivalent to a normal
 //! // cast with `as`
-//! assert_eq!(u16(0u8), 0u16);
+//! assert_eq!(u16(0u8), Ok(0u16));
 //!
 //! // Everything else will return a `Result` depending on the success of the
 //! // operation
@@ -33,7 +33,7 @@
 //! // `u8` as a type
 //! let x: u8 = 0;
 //! // `u8` as a module
-//! let y = u16(u8::MAX);
+//! let y = u16(u8::MAX).unwrap();
 //! // `u8` as a function
 //! let z = u8(y).unwrap();
 //! # }
@@ -48,7 +48,7 @@
 //! use cast::From as _0;
 //!
 //! # fn main() {
-//! assert_eq!(c_ulonglong::cast(0u8), 0u64);
+//! assert_eq!(c_ulonglong::cast(0u8), Ok(0u64));
 //! # }
 //! ```
 //!
@@ -59,9 +59,9 @@
 //! ```
 //! fn to_u32<T>(x: T) -> u32
 //!     // reads as: "where u32 can be casted from T with output u32"
-//!     where u32: cast::From<T, Output=u32>,
+//!     where u32: cast::From<T, Output=Result<u32, cast::Error>>,
 //! {
-//!     cast::u32(x)
+//!     cast::u32(x).unwrap()
 //! }
 //!
 //! # fn main() {
@@ -88,7 +88,6 @@
 //! cast = { version = "*", default-features = false }
 //! ```
 
-#![allow(const_err)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]
 #![deny(unsafe_code)]
@@ -149,7 +148,7 @@ impl error::Error for Error {
 /// The "cast from" operation
 pub trait From<Src> {
     /// The result of the cast operation: either `Self` or `Result<Self, Error>`
-    type Output = Result<Src, Error>;
+    type Output;
 
     /// Checked cast from `Src` to `Self`
     fn cast(_: Src) -> Self::Output;
@@ -180,6 +179,8 @@ macro_rules! float_promotion {
         $(
             $(
                 impl From<$src> for $dst {
+                    type Output = Result<$dst, Error>;
+
                     #[inline]
                     fn cast(src: $src) -> Self::Output {
                         Ok(src as $dst)
@@ -196,6 +197,8 @@ macro_rules! half_promotion {
         $(
             $(
                 impl From<$src> for $dst {
+                    type Output = Result<$dst, Error>;
+
                     #[inline]
                     fn cast(src: $src) -> Self::Output {
                         if src < 0 {
@@ -210,12 +213,31 @@ macro_rules! half_promotion {
     }
 }
 
+macro_rules! half_promotion_unsigned {
+    ($($src:ty => $($dst:ty),+);+;) => {
+        $(
+            $(
+                impl From<$src> for $dst {
+                    type Output = Result<$dst, Error>;
+
+                    #[inline]
+                    fn cast(src: $src) -> Self::Output {
+                        Ok(src as $dst)
+                    }
+                }
+            )+
+        )+
+    }
+}
+
 /// From an unsigned `$src` to a smaller `$dst`
 macro_rules! from_unsigned {
     ($($src:ident => $($dst:ident),+);+;) => {
         $(
             $(
                 impl From<$src> for $dst {
+                    type Output = Result<$dst, Error>;
+
                     #[inline]
                     fn cast(src: $src) -> Self::Output {
                         use core::$dst;
@@ -238,6 +260,8 @@ macro_rules! from_signed {
         $(
             $(
                 impl From<$src> for $dst {
+                    type Output = Result<$dst, Error>;
+
                     #[inline]
                     fn cast(src: $src) -> Self::Output {
                         use core::$dst;
@@ -262,6 +286,8 @@ macro_rules! from_float {
         $(
             $(
                 impl From<$src> for $dst {
+                    type Output = Result<$dst, Error>;
+
                     #[inline]
                     fn cast(src: $src) -> Self::Output {
                         use core::{$dst, $src};
@@ -316,6 +342,8 @@ macro_rules! from_float_dst {
         $(
             $(
                 impl From<$src> for $dst {
+                    type Output = Result<$dst, Error>;
+
                     #[inline]
                     #[allow(unused_comparisons)]
                     fn cast(src: $src) -> Self::Output {
@@ -372,7 +400,7 @@ mod _32 {
 
     // Unsigned
     // FORK EDIT: this is a full promotion, but to keep a concise API, all must return a Result.
-    half_promotion! {
+    half_promotion_unsigned! {
         u8    => f32, f64,     i16, i32, isize, i64, u8, u16, u32, usize, u64;
         u16   => f32, f64,          i32, isize, i64,     u16, u32, usize, u64;
         u32   => f32, f64,                      i64,          u32, usize, u64;
@@ -407,7 +435,7 @@ mod _64 {
 
     // Signed
     // FORK EDIT: see unsigned (32 bit) comment
-    half_promotion! {
+    half_promotion_unsigned! {
         i8    => f32, f64, i8, i16, i32, i64, isize;
         i16   => f32, f64,     i16, i32, i64, isize;
         i32   => f32, f64,          i32, i64, isize;
@@ -433,7 +461,7 @@ mod _64 {
 
     // Unsigned
     // FORK EDIT: see unsigned (32 bit) comment
-    half_promotion! {
+    half_promotion_unsigned! {
         u8    => f32, f64,     i16, i32, i64, isize, u8, u16, u32, u64, usize;
         u16   => f32, f64,          i32, i64, isize,     u16, u32, u64, usize;
         u32   => f32, f64,               i64, isize,          u32, u64, usize;
@@ -467,7 +495,7 @@ mod _x128 {
 
     // Signed
     // FORK EDIT: see unsigned (32 bit) comment
-    half_promotion! {
+    half_promotion_unsigned! {
         i8    =>                              i128;
         i16   =>                              i128;
         i32   =>                              i128;
@@ -491,7 +519,7 @@ mod _x128 {
 
     // Unsigned
     // FORK EDIT: see unsigned (32 bit) comment
-    half_promotion! {
+    half_promotion_unsigned! {
         u8    =>                              i128,                           u128;
         u16   =>                              i128,                           u128;
         u32   =>                              i128,                           u128;

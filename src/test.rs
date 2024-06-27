@@ -11,7 +11,7 @@ macro_rules! promote_and_back {
                         $(
                             quickcheck! {
                                 fn $dst(src: $src) -> bool {
-                                    $src::cast($dst::cast(src)).is_ok()
+                                    $src::cast($dst::cast(src).unwrap()).is_ok()
                                 }
                             }
                          )+
