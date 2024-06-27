@@ -149,7 +149,7 @@ impl error::Error for Error {
 /// The "cast from" operation
 pub trait From<Src> {
     /// The result of the cast operation: either `Self` or `Result<Self, Error>`
-    type Output;
+    type Output = Result<Src, Error>;
 
     /// Checked cast from `Src` to `Self`
     fn cast(_: Src) -> Self::Output;
@@ -180,8 +180,6 @@ macro_rules! float_promotion {
         $(
             $(
                 impl From<$src> for $dst {
-                    type Output = Result<$dst, Error>;
-
                     #[inline]
                     fn cast(src: $src) -> Self::Output {
                         Ok(src as $dst)
@@ -198,8 +196,6 @@ macro_rules! half_promotion {
         $(
             $(
                 impl From<$src> for $dst {
-                    type Output = Result<$dst, Error>;
-
                     #[inline]
                     fn cast(src: $src) -> Self::Output {
                         if src < 0 {
@@ -220,8 +216,6 @@ macro_rules! from_unsigned {
         $(
             $(
                 impl From<$src> for $dst {
-                    type Output = Result<$dst, Error>;
-
                     #[inline]
                     fn cast(src: $src) -> Self::Output {
                         use core::$dst;
@@ -244,8 +238,6 @@ macro_rules! from_signed {
         $(
             $(
                 impl From<$src> for $dst {
-                    type Output = Result<$dst, Error>;
-
                     #[inline]
                     fn cast(src: $src) -> Self::Output {
                         use core::$dst;
@@ -270,8 +262,6 @@ macro_rules! from_float {
         $(
             $(
                 impl From<$src> for $dst {
-                    type Output = Result<$dst, Error>;
-
                     #[inline]
                     fn cast(src: $src) -> Self::Output {
                         use core::{$dst, $src};
@@ -326,8 +316,6 @@ macro_rules! from_float_dst {
         $(
             $(
                 impl From<$src> for $dst {
-                     type Output = Result<$dst, Error>;
-
                     #[inline]
                     #[allow(unused_comparisons)]
                     fn cast(src: $src) -> Self::Output {
