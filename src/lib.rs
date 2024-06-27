@@ -174,7 +174,8 @@ fns!(f32, f64, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize);
 fns!(i128, u128);
 
 /// `$dst` can hold any value of `$src`
-macro_rules! promotion {
+/// FORK EDIT: I don't have a need for this.
+/*macro_rules! promotion {
     ($($src:ty => $($dst: ty),+);+;) => {
         $(
             $(
@@ -189,7 +190,7 @@ macro_rules! promotion {
             )+
         )+
     }
-}
+}*/
 
 /// `$dst` can hold any positive value of `$src`
 macro_rules! half_promotion {
@@ -356,7 +357,8 @@ mod _32 {
     use crate::{Error, From};
 
     // Signed
-    promotion! {
+    // FORK EDIT: see unsigned comment
+    half_promotion! {
         i8    => f32, f64, i8, i16, i32, isize, i64;
         i16   => f32, f64,     i16, i32, isize, i64;
         i32   => f32, f64,          i32, isize, i64;
@@ -381,7 +383,8 @@ mod _32 {
     }
 
     // Unsigned
-    promotion! {
+    // FORK EDIT: this is a full promotion, but to keep a concise API, all must return a Result.
+    half_promotion! {
         u8    => f32, f64,     i16, i32, isize, i64, u8, u16, u32, usize, u64;
         u16   => f32, f64,          i32, isize, i64,     u16, u32, usize, u64;
         u32   => f32, f64,                      i64,          u32, usize, u64;
@@ -398,7 +401,8 @@ mod _32 {
     }
 
     // Float
-    promotion! {
+    // FORK EDIT: see unsigned comment
+    half_promotion! {
         f32   => f32, f64;
         f64   =>      f64;
     }
@@ -414,7 +418,8 @@ mod _64 {
     use crate::{Error, From};
 
     // Signed
-    promotion! {
+    // FORK EDIT: see unsigned (32 bit) comment
+    half_promotion! {
         i8    => f32, f64, i8, i16, i32, i64, isize;
         i16   => f32, f64,     i16, i32, i64, isize;
         i32   => f32, f64,          i32, i64, isize;
@@ -439,7 +444,8 @@ mod _64 {
     }
 
     // Unsigned
-    promotion! {
+    // FORK EDIT: see unsigned (32 bit) comment
+    half_promotion! {
         u8    => f32, f64,     i16, i32, i64, isize, u8, u16, u32, u64, usize;
         u16   => f32, f64,          i32, i64, isize,     u16, u32, u64, usize;
         u32   => f32, f64,               i64, isize,          u32, u64, usize;
@@ -456,7 +462,8 @@ mod _64 {
     }
 
     // Float
-    promotion! {
+    // FORK EDIT: see unsigned (32 bit) comment
+    half_promotion! {
         f32  => f32, f64;
         f64  =>      f64;
     }
@@ -471,7 +478,8 @@ mod _x128 {
     use crate::{Error, From};
 
     // Signed
-    promotion! {
+    // FORK EDIT: see unsigned (32 bit) comment
+    half_promotion! {
         i8    =>                              i128;
         i16   =>                              i128;
         i32   =>                              i128;
@@ -494,7 +502,8 @@ mod _x128 {
     }
 
     // Unsigned
-    promotion! {
+    // FORK EDIT: see unsigned (32 bit) comment
+    half_promotion! {
         u8    =>                              i128,                           u128;
         u16   =>                              i128,                           u128;
         u32   =>                              i128,                           u128;
