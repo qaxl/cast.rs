@@ -174,13 +174,13 @@ fns!(f32, f64, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize);
 fns!(i128, u128);
 
 /// `$dst` can hold any value of `$src`
-/// FORK EDIT: I don't have a need for this.
-/*macro_rules! promotion {
+/// FORK EDIT: I don't need this. Except float types need.
+macro_rules! float_promotion {
     ($($src:ty => $($dst: ty),+);+;) => {
         $(
             $(
                 impl From<$src> for $dst {
-                    type Output = $dst;
+                    type Output = Result<$dst, Error>;
 
                     #[inline]
                     fn cast(src: $src) -> $dst {
@@ -190,7 +190,7 @@ fns!(i128, u128);
             )+
         )+
     }
-}*/
+}
 
 /// `$dst` can hold any positive value of `$src`
 macro_rules! half_promotion {
@@ -402,7 +402,7 @@ mod _32 {
 
     // Float
     // FORK EDIT: see unsigned comment
-    half_promotion! {
+    float_promotion! {
         f32   => f32, f64;
         f64   =>      f64;
     }
@@ -463,7 +463,7 @@ mod _64 {
 
     // Float
     // FORK EDIT: see unsigned (32 bit) comment
-    half_promotion! {
+    float_promotion! {
         f32  => f32, f64;
         f64  =>      f64;
     }
