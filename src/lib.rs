@@ -184,7 +184,7 @@ macro_rules! float_promotion {
 
                     #[inline]
                     fn cast(src: $src) -> $dst {
-                        src as $dst
+                        Ok(src as $dst)
                     }
                 }
             )+
